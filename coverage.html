@@ -1,0 +1,372 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>apppulse: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">github.com/rollicks-c/apppulse/api.go (0.0%)</option>
+				
+				<option value="file1">github.com/rollicks-c/apppulse/health/api.go (71.4%)</option>
+				
+				<option value="file2">github.com/rollicks-c/apppulse/health/store.go (100.0%)</option>
+				
+				<option value="file3">github.com/rollicks-c/apppulse/health/watchdog.go (34.5%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package apppulse
+
+import (
+        "context"
+        "github.com/rollicks-c/apppulse/health"
+)
+
+func Run(ctx context.Context, options ...health.WatchDogOption) <span class="cov0" title="0">{
+        health.Run(ctx, options...)
+}</span>
+
+func GetStatus() health.Status <span class="cov0" title="0">{
+        return health.GetStatus()
+}</span>
+
+func Register(name string, options ...health.Option) health.Reporter <span class="cov0" title="0">{
+        return health.Register(name, options...)
+}</span>
+
+func Report(name string, err error) <span class="cov0" title="0">{
+        health.Report(name, err)
+}</span>
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package health
+
+import (
+        "context"
+        "fmt"
+        "time"
+)
+
+type Reporter func(err error)
+
+type Status struct {
+        HasError bool
+        Checks   map[string]string
+        Status   string
+}
+type WatchDogOption func(wd *watchDog)
+
+func WithWatchDogInterval(d time.Duration) WatchDogOption <span class="cov0" title="0">{
+        return func(wd *watchDog) </span><span class="cov0" title="0">{
+                wd.interval = d
+        }</span>
+}
+
+func Run(ctx context.Context, options ...WatchDogOption) <span class="cov0" title="0">{
+
+        wd := &amp;watchDog{
+                interval: time.Second * 5,
+        }
+        for _, option := range options </span><span class="cov0" title="0">{
+                option(wd)
+        }</span>
+        <span class="cov0" title="0">wd.Run(ctx)</span>
+
+}
+
+func GetStatus() Status <span class="cov0" title="0">{
+        return data.Status
+}</span>
+
+type Option func(*healthCheck)
+
+func WithGracePeriod(d time.Duration) Option <span class="cov0" title="0">{
+        return func(hc *healthCheck) </span><span class="cov0" title="0">{
+                hc.GracePeriod = d
+        }</span>
+}
+
+func WithAutoFailAfter(d time.Duration) Option <span class="cov8" title="1">{
+        return func(hc *healthCheck) </span><span class="cov8" title="1">{
+                hc.AutoFailAfter = &amp;d
+        }</span>
+}
+
+func Register(name string, options ...Option) Reporter <span class="cov8" title="1">{
+        dataLock.Lock()
+        defer dataLock.Unlock()
+
+        if data.Checks == nil </span><span class="cov0" title="0">{
+                data.Checks = make(map[string]healthCheck)
+        }</span>
+
+        <span class="cov8" title="1">check := healthCheck{
+                Name:        name,
+                GracePeriod: time.Nanosecond * 1,
+                Error:       fmt.Errorf("not yet checked"),
+        }
+        for _, option := range options </span><span class="cov8" title="1">{
+                option(&amp;check)
+        }</span>
+        <span class="cov8" title="1">data.Checks[name] = check
+
+        //data.Status = updateStatus(data)
+
+        return func(err error) </span><span class="cov8" title="1">{
+                Report(name, err)
+        }</span>
+}
+
+func Report(name string, err error) <span class="cov8" title="1">{
+        dataLock.Lock()
+        defer dataLock.Unlock()
+
+        if data.Checks == nil </span><span class="cov8" title="1">{
+                data.Checks = make(map[string]healthCheck)
+        }</span>
+
+        <span class="cov8" title="1">check, ok := data.Checks[name]
+        if !ok </span><span class="cov8" title="1">{
+                check = healthCheck{
+                        Name:          name,
+                        AutoFailAfter: nil,
+                }
+        }</span>
+
+        <span class="cov8" title="1">check.LastCheck = time.Now()
+        check.IsRecovering = false
+        if check.Error != nil &amp;&amp; err == nil </span><span class="cov8" title="1">{
+                check.IsRecovering = true
+        }</span>
+        <span class="cov8" title="1">check.Error = err
+        data.Checks[name] = check
+
+        data.Status = updateStatus(data)</span>
+}
+</pre>
+		
+		<pre class="file" id="file2" style="display: none">package health
+
+import (
+        "github.com/rs/zerolog/log"
+        "sync"
+        "time"
+)
+
+var (
+        dataLock = sync.Mutex{}
+        data     = healthData{}
+)
+
+type healthData struct {
+        Checks map[string]healthCheck
+        Status Status
+}
+
+type healthCheck struct {
+        Name          string
+        Error         error
+        IsRecovering  bool
+        AutoFailAfter *time.Duration
+        GracePeriod   time.Duration
+        LastCheck     time.Time
+}
+
+func updateStatus(db healthData) Status <span class="cov8" title="1">{
+
+        hadError := db.Status.HasError
+
+        status := Status{
+                HasError: false,
+                Checks:   make(map[string]string),
+                Status:   "OK",
+        }
+        for _, check := range db.Checks </span><span class="cov8" title="1">{
+                if check.Error != nil </span><span class="cov8" title="1">{
+                        status.HasError = true
+                        status.Status = "ERROR"
+                        status.Checks[check.Name] = check.Error.Error()
+                        continue</span>
+                } else<span class="cov8" title="1"> if check.IsRecovering </span><span class="cov8" title="1">{
+                        status.HasError = true
+                        status.Status = "RECOVERING"
+                        status.Checks[check.Name] = "recovering..."
+                        continue</span>
+                }
+                <span class="cov8" title="1">status.Checks[check.Name] = "OK"</span>
+        }
+
+        // recover from error
+        <span class="cov8" title="1">if hadError &amp;&amp; !status.HasError </span><span class="cov8" title="1">{
+                log.Info().Msg("health recovered")
+        }</span>
+
+        <span class="cov8" title="1">return status</span>
+}
+</pre>
+		
+		<pre class="file" id="file3" style="display: none">package health
+
+import (
+        "context"
+        "fmt"
+        "time"
+)
+
+type watchDog struct {
+        interval time.Duration
+}
+
+func (wd watchDog) Run(ctx context.Context) <span class="cov0" title="0">{
+
+        // setup timer
+        ticker := time.NewTicker(wd.interval)
+        defer ticker.Stop()
+
+        for </span><span class="cov0" title="0">{
+
+                // invoke time-based updates
+                wd.autoFail()
+                wd.recoverFromError()
+
+                // await next tick
+                select </span>{
+                case &lt;-ticker.C:<span class="cov0" title="0">
+                        continue</span>
+                case &lt;-ctx.Done():<span class="cov0" title="0">
+                        return</span>
+                }
+
+        }
+}
+
+func (wd watchDog) autoFail() <span class="cov8" title="1">{
+
+        dataLock.Lock()
+        defer dataLock.Unlock()
+
+        now := time.Now()
+        for name, check := range data.Checks </span><span class="cov8" title="1">{
+                if check.AutoFailAfter == nil </span><span class="cov8" title="1">{
+                        continue</span>
+                }
+                <span class="cov8" title="1">if check.LastCheck.Add(*check.AutoFailAfter).Before(now) </span><span class="cov8" title="1">{
+                        check.Error = fmt.Errorf("no report since %s", check.LastCheck.Format(time.RFC1123))
+                        data.Checks[name] = check
+                }</span>
+        }
+
+        <span class="cov8" title="1">data.Status = updateStatus(data)</span>
+}
+
+func (wd watchDog) recoverFromError() <span class="cov0" title="0">{
+
+        dataLock.Lock()
+        defer dataLock.Unlock()
+
+        now := time.Now()
+        for name, check := range data.Checks </span><span class="cov0" title="0">{
+                if !check.IsRecovering </span><span class="cov0" title="0">{
+                        continue</span>
+                }
+                <span class="cov0" title="0">if check.LastCheck.Add(check.GracePeriod).Before(now) </span><span class="cov0" title="0">{
+                        check.Error = nil
+                        check.IsRecovering = false
+                        data.Checks[name] = check
+                }</span>
+        }
+
+        <span class="cov0" title="0">data.Status = updateStatus(data)</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
