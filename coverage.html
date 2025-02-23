@@ -57,7 +57,7 @@
 				
 				<option value="file0">github.com/rollicks-c/apppulse/api.go (0.0%)</option>
 				
-				<option value="file1">github.com/rollicks-c/apppulse/health/api.go (71.4%)</option>
+				<option value="file1">github.com/rollicks-c/apppulse/health/api.go (66.7%)</option>
 				
 				<option value="file2">github.com/rollicks-c/apppulse/health/store.go (100.0%)</option>
 				
@@ -167,6 +167,11 @@ func Register(name string, options ...Option) Reporter <span class="cov8" title=
         }
         for _, option := range options </span><span class="cov8" title="1">{
                 option(&amp;check)
+        }</span>
+        <span class="cov8" title="1">if prev, ok := data.Checks[name]; ok </span><span class="cov0" title="0">{
+                check.LastCheck = prev.LastCheck
+                check.IsRecovering = prev.IsRecovering
+                check.Error = prev.Error
         }</span>
         <span class="cov8" title="1">data.Checks[name] = check
 
