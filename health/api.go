@@ -67,6 +67,11 @@ func Register(name string, options ...Option) Reporter {
 	for _, option := range options {
 		option(&check)
 	}
+	if prev, ok := data.Checks[name]; ok {
+		check.LastCheck = prev.LastCheck
+		check.IsRecovering = prev.IsRecovering
+		check.Error = prev.Error
+	}
 	data.Checks[name] = check
 
 	//data.Status = updateStatus(data)
